@@ -1,0 +1,75 @@
+zabbix_export:
+  version: '6.0'
+  date: '2022-12-08T15:04:41Z'
+  groups:
+    -
+      uuid: dc579cd7a1a34222933f24f52a68bcd8
+      name: 'Linux servers'
+  templates:
+    -
+      uuid: ef0ddf91eea24a80b133e36fe2c53ea1
+      template: 'Linux - NFS mount discovery'
+      name: 'Linux - NFS mount discovery'
+      groups:
+        -
+          name: 'Linux servers'
+      discovery_rules:
+        -
+          uuid: da888ae63c6e4d08a3d4c3696e603fb2
+          name: 'nfs discovery'
+          key: vfs.fs.mfs.discovery
+          delay: 1h
+          lifetime: 1d
+          item_prototypes:
+            -
+              uuid: e080799fb1c34f458dda7bdfc612a07d
+              name: '{#NFSNAME} mount status'
+              key: 'vfs.file.regmatch[/proc/mounts,{#NFSNAME},,,]'
+              delay: 1h
+              history: 1d
+              trends: 1d
+              preprocessing:
+                -
+                  type: BOOL_TO_DECIMAL
+                  parameters:
+                    - ''
+              tags:
+                -
+                  tag: component
+                  value: nfs
+                -
+                  tag: filesystem
+                  value: '{#NFSNAME}'
+              trigger_prototypes:
+                -
+                  uuid: 1c1e2d865332442eb6483939544a2108
+                  expression: 'last(/Linux - NFS mount discovery/vfs.file.regmatch[/proc/mounts,{#NFSNAME},,,])=0'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'last(/Linux - NFS mount discovery/vfs.file.regmatch[/proc/mounts,{#NFSNAME},,,])=1'
+                  name: '{#NFSNAME} mount status error'
+                  priority: AVERAGE
+      macros:
+        -
+          macro: '{$VFS.FS.FSNAME.MATCHES}'
+          value: .+
+        -
+          macro: '{$VFS.FS.FSNAME.NOT_MATCHES}'
+          value: ^(/dev|/sys|/run|/proc|.+/shm$)
+        -
+          macro: '{$VFS.FS.FSTYPE.MATCHES}'
+          value: ^(btrfs|ext2|ext3|ext4|reiser|xfs|ffs|ufs|jfs|jfs2|vxfs|hfs|apfs|refs|ntfs|fat32|zfs)$
+        -
+          macro: '{$VFS.FS.FSTYPE.NOT_MATCHES}'
+          value: ^\s$
+        -
+          macro: '{$VFS.FS.INODE.PFREE.MIN.CRIT}'
+          value: '10'
+        -
+          macro: '{$VFS.FS.INODE.PFREE.MIN.WARN}'
+          value: '20'
+        -
+          macro: '{$VFS.FS.PUSED.MAX.CRIT}'
+          value: '90'
+        -
+          macro: '{$VFS.FS.PUSED.MAX.WARN}'
+          value: '80'
