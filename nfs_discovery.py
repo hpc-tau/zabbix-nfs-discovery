@@ -10,7 +10,4 @@ for line in data:
         DISCOVERY_LIST.append({"{#NFSNAME}": line.split()[1]})
 
 JSON = json.dumps(DISCOVERY_LIST)
-
-for i in json.loads(JSON):
-    print(i)
-print(len(DISCOVERY_LIST))
+print(JSON)
